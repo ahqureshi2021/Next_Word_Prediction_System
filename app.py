@@ -8,7 +8,7 @@ st.markdown("Type a phrase below, and the AI will predict what comes next.")
 
 # User Input
 input_text = st.text_input("Enter your text:")
-user_input = st.text_input("Enter text")
+#user_input = st.text_input("Enter text")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -38,6 +38,7 @@ if st.button("Predict"):
                 st.error(f"Could not connect to backend: {e}")
 
 st.divider()
+
 
 
 
