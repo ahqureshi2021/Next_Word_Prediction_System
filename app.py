@@ -7,7 +7,7 @@ st.title("🔮 Next Word Prediction System")
 st.markdown("Type a phrase below, and the AI will predict what comes next.")
 
 # User Input
-#input_text = st.text_input("Enter your text:")
+input_text = st.text_input("Enter your text:")
 user_input = st.text_input("Enter text")
 
 col1, col2 = st.columns(2)
@@ -38,5 +38,6 @@ if st.button("Predict"):
                 st.error(f"Could not connect to backend: {e}")
 
 st.divider()
+
 
 
