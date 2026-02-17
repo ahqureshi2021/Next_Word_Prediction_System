@@ -1,8 +1,10 @@
 altair==4.2.2
 pandas
-streamlit==1.19.0
+streamlit>=1.32.0
 fastapi
 uvicorn
-transformers
-torch
+transformers>=5.2
+torch>=2.10
 requests
+scikit-learn
+numpy
