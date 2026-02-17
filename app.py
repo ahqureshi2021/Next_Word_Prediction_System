@@ -1,59 +1,80 @@
 import streamlit as st
-import requests
+import numpy as np
+import pickle
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+# Page Config
 st.set_page_config(page_title="Next Word Predictor", page_icon="🔮")
 
+# --- 1. MODEL LOADING (Cached for Speed) ---
+@st.cache_resource
+def load_resources():
+    # Load your trained model
+    # Ensure 'next_word_model.h5' is in your GitHub repo folder
+    model = load_model('next_word_model.h5')
+    
+    # Load your tokenizer (assuming it was saved as a pickle file)
+    with open('tokenizer.pkl', 'rb') as handle:
+        tokenizer = pickle.load(handle)
+        
+    return model, tokenizer
+
+try:
+    model, tokenizer = load_resources()
+except Exception as e:
+    st.error(f"Error loading model files: {e}")
+    st.info("Check if next_word_model.h5 and tokenizer.pkl are in your GitHub repository.")
+    st.stop()
+
+# --- 2. PREDICTION FUNCTION ---
+def predict_next_words(model, tokenizer, text, num_words_to_predict):
+    for _ in range(num_words_to_predict):
+        # Tokenize and Pad
+        token_list = tokenizer.texts_to_sequences([text])[0]
+        # Match the max_length your model was trained on (e.g., 20)
+        token_list = pad_sequences([token_list], maxlen=20, padding='pre')
+        
+        # Predict
+        predicted = model.predict(token_list, verbose=0)
+        predicted_index = np.argmax(predicted, axis=1)[0]
+        
+        # Convert index back to word
+        output_word = ""
+        for word, index in tokenizer.word_index.items():
+            if index == predicted_index:
+                output_word = word
+                break
+        text += " " + output_word
+    return text
+
+# --- 3. USER INTERFACE ---
 st.title("🔮 Next Word Prediction System")
-st.markdown("Type a phrase below, and the AI will predict what comes next.")
+st.markdown("This AI model analyzes your text and suggests the most likely following words.")
 
-# --- CONFIGURATION ---
-# This looks for a URL in Streamlit Secrets. If it's not there, it uses localhost.
-# In Streamlit Cloud Settings -> Secrets, add: BACKEND_URL = "https://your-api.com/predict"
-DEFAULT_API = "http://127.0.0.1:8000/predict"
-API_URL = st.secrets.get("BACKEND_URL", DEFAULT_API)
+user_input = st.text_input("Enter your text:", placeholder="Once upon a...")
 
-# --- USER INPUT ---
-# Fixed the NameError/Assignment error here
-user_input = st.text_input("Enter your text:")
-
-col1, col2 = st.columns(2)
+col1, _ = st.columns([1, 1])
 with col1:
     num_words = st.slider("Words to predict", 1, 10, 1)
 
-# --- PREDICTION LOGIC ---
 if st.button("Predict"):
     if not user_input.strip():
         st.warning("Please enter some text first!")
     else:
-        with st.spinner("Thinking..."):
+        with st.spinner("Analyzing patterns..."):
             try:
-                # API Call to your Backend
-                # We also pass 'num_words' since you have a slider for it!
-                payload = {
-                    "text": user_input,
-                    "num_words": num_words 
-                }
+                # Run the prediction directly in the script
+                full_result = predict_next_words(model, tokenizer, user_input, num_words)
                 
-                response = requests.post(API_URL, json=payload, timeout=10)
-
-                if response.status_code == 200:
-                    result = response.json()
-                    st.success("Prediction Complete!")
-                    
-                    # Using .get() prevents the app from crashing if the keys are missing
-                    prediction = result.get('prediction', 'No prediction found')
-                    full_text = result.get('full_text', user_input + " " + prediction)
-                    
-                    st.subheader(f"Next word(s): **{prediction}**")
-                    st.info(f"Full Sequence: {full_text}")
-                else:
-                    st.error(f"Backend error (Status: {response.status_code}). Check if your API is running.")
-            
-            except requests.exceptions.ConnectionError:
-                st.error(f"Connection Refused: Could not reach the backend at `{API_URL}`.")
-                if "127.0.0.1" in API_URL:
-                    st.info("💡 **Tip:** You are trying to connect to a local backend from the Cloud. You need to deploy your API and update the URL in Streamlit Secrets.")
+                # Extract only the newly predicted part
+                new_words = full_result.replace(user_input, "").strip()
+                
+                st.success("Prediction Complete!")
+                st.subheader(f"Next word(s): **{new_words}**")
+                st.info(f"Full Sequence: {full_result}")
+                
             except Exception as e:
-                st.error(f"An unexpected error occurred: {e}")
+                st.error(f"Prediction failed: {e}")
 
 st.divider()
