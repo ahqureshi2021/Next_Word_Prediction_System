@@ -7,7 +7,7 @@ st.title("🔮 Next Word Prediction System")
 st.markdown("Type a phrase below, and the AI will predict what comes next.")
 
 # User Input
-input_text = st.text_input("Enter your text:", placeholder="The future of AI is...")
+input_text = st.text_input("Enter your text:")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -38,4 +38,3 @@ if st.button("Predict"):
 
 st.divider()
 
-st.caption("Built with FastAPI, Streamlit, and Hugging Face Transformers.")
