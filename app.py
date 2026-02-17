@@ -22,7 +22,7 @@ if st.button("Predict"):
             try:
                 # API Call to FastAPI
                 response = requests.post(
-                    "http://127.0.0.1:5000/predict",
+                    "http://127.0.0.1:8000/predict",
                      json={"text": user_input}
                     )
 
@@ -38,6 +38,7 @@ if st.button("Predict"):
                 st.error(f"Could not connect to backend: {e}")
 
 st.divider()
+
 
 
 
