@@ -1,0 +1,8 @@
+altair
+pandas
+streamlit
+fastapi
+uvicorn
+transformers
+torch
+requests
